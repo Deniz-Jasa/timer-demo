@@ -92,7 +92,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-.ibm-plex-sans {
-  font-family: 'IBM Plex Sans', sans-serif;
-}

@@ -68,9 +68,13 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
     }, [isActive, mainTime, isExtraTimeActive, extraTime, extraTimeMinutes]);
 
     useEffect(() => {
-        // Reset countdown whenever startDate or endDate changes
-        handleReset();
+        const reset = () => {
+            handleReset();
+        };
+    
+        reset();
     }, [startingMinutes]);
+    
 
     const toggleStartStop = () => {
 
@@ -138,7 +142,7 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
 
 
             {(isExtraTimeActive && extraTime > 0) && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
                     <div style={{ textAlign: 'center', fontSize: '1.5rem' }}>
                         {displayStartDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
@@ -158,7 +162,7 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
                         }}>
                             {formatTime(extraTime)}
                             <div style={{ width: '1px', height: '55%', backgroundColor: '#0F0F0F', margin: '0 8px' }}></div>
-                            <span>{extraTimeMinutes}'</span> {/* Use span for inline element */}
+                            <span>{extraTimeMinutes}&rsquo;</span>
                         </div>
                     </div>
                 </div>
