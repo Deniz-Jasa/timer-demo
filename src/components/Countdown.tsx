@@ -17,6 +17,7 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
 
     useEffect(() => {
         setDisplayStartDate(startDate);
+        setCurrentDay(1);
     }, [startDate]);
 
     const handleDayIncrement = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -30,7 +31,8 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
             const newStartDate = new Date(displayStartDate);
             newStartDate.setDate(displayStartDate.getDate() - 1);
             setDisplayStartDate(newStartDate);
-        } else {
+        }
+        else {
             setCurrentDay((prevDay) => prevDay + 1);
             // Increment the startDate by one day
             const newStartDate = new Date(displayStartDate);
