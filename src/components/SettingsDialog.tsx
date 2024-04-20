@@ -52,7 +52,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ setSettings }) => {
         <DialogTitle>Settings</DialogTitle>
         <br></br>
         <DialogDescription>
-          Make changes to the simulation's countdown setting. Click save changes below when you're done.
+          Make changes to the simulation&rsquo;s countdown setting. Click save changes below when you&rsquo;re done.
         </DialogDescription>
       </DialogHeader>
       <div className="grid gap-4 py-4">
