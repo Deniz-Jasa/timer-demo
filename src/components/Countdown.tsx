@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface CountdownProps {
     startingMinutes: number;
     extraTimeMinutes: number;
     startDate: Date;
+    mutedState: boolean;
 }
 
-const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes, startDate }) => {
+const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes, startDate, mutedState }) => {
     const [mainTime, setMainTime] = useState(startingMinutes * 60);
     const [extraTime, setExtraTime] = useState(0);
     const [isActive, setIsActive] = useState(false);
@@ -15,40 +16,49 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
     const [currentDay, setCurrentDay] = useState<number>(1);
     const [displayStartDate, setDisplayStartDate] = useState<Date>(startDate);
 
+    const finalAlarmRef = useRef<HTMLAudioElement>(null);
+    const warningAlarmRef = useRef<HTMLAudioElement>(null);
+
     useEffect(() => {
         setDisplayStartDate(startDate);
         setCurrentDay(1);
     }, [startDate]);
 
-    const handleDayIncrement = (event: React.MouseEvent<HTMLDivElement>) => {
-        const divRect = event.currentTarget.getBoundingClientRect();
-        const clickX = event.clientX - divRect.left; // Calculate the click position relative to the div
-        const divWidth = divRect.width;
-
-        if (clickX < divWidth / 2 && currentDay > 1) {
-            setCurrentDay((prevDay) => prevDay - 1);
-            // Decrement the startDate by one day
-            const newStartDate = new Date(displayStartDate);
-            newStartDate.setDate(displayStartDate.getDate() - 1);
-            setDisplayStartDate(newStartDate);
+    useEffect(() => {
+        const finalAlarm = finalAlarmRef.current;
+        const warningAlarm = warningAlarmRef.current;
+    
+        if (Math.abs(mainTime - 5 * 60) <= 5 && mutedState) {
+            if (warningAlarm?.paused) {
+                warningAlarm.play();
+            }
+        } else if (mainTime === 0 && mutedState) {
+            if (finalAlarm?.paused) {
+                finalAlarm.play();
+            }
         }
-        else {
-            setCurrentDay((prevDay) => prevDay + 1);
-            // Increment the startDate by one day
-            const newStartDate = new Date(displayStartDate);
-            newStartDate.setDate(displayStartDate.getDate() + 1);
-            setDisplayStartDate(newStartDate);
-        }
-    };    
-
+    
+        return () => {
+            if (warningAlarm) {
+                warningAlarm.pause();
+                warningAlarm.currentTime = 0; // Reset audio to the beginning
+            }
+            if (finalAlarm) {
+                finalAlarm.pause();
+                finalAlarm.currentTime = 0; // Reset audio to the beginning
+            }
+        };
+    }, [mainTime, mutedState]);
+    
+    
 
     useEffect(() => {
-        let intervalId: string | number | NodeJS.Timeout | undefined;
+        let intervalId: NodeJS.Timeout | undefined;
 
         if (isActive) {
             if (mainTime > 0) {
                 intervalId = setInterval(() => {
-                    setMainTime((prevTime) => prevTime - 1);
+                    setMainTime(prevTime => prevTime - 1);
                 }, 1000);
             } else if (!isExtraTimeActive) {
                 setIsExtraTimeActive(true);
@@ -58,36 +68,29 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
         if (isExtraTimeActive) {
             if (extraTime < extraTimeMinutes * 60) {
                 intervalId = setInterval(() => {
-                    setExtraTime((prevTime) => prevTime + 1);
+                    setExtraTime(prevTime => prevTime + 1);
                 }, 1000);
-            }
-            else {
-                setIsActive(false); // Optionally, also stop the active state to prevent restarting
+            } else {
+                setIsActive(false);
             }
         }
 
-        return () => clearInterval(intervalId); // This will clear the interval when the component unmounts or the dependencies change
+        return () => clearInterval(intervalId);
     }, [isActive, mainTime, isExtraTimeActive, extraTime, extraTimeMinutes]);
 
     useEffect(() => {
         const reset = () => {
             handleReset();
         };
-    
+
         reset();
     }, [startingMinutes]);
-    
 
     const toggleStartStop = () => {
-
         if (mainTime > 0) {
             setIsActive(!isActive);
-        }
-
-        else if (isExtraTimeActive) {
+        } else if (isExtraTimeActive) {
             setIsExtraTimeActive(false);
-            console.log("HERE");
-
         }
     };
 
@@ -96,12 +99,32 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
         setIsExtraTimeActive(false);
         setMainTime(startingMinutes * 60);
         setExtraTime(0);
+        if (finalAlarmRef.current) finalAlarmRef.current.pause();
+        if (warningAlarmRef.current) warningAlarmRef.current.pause();
     };
 
     const formatTime = (time: number) => {
         const minutes = Math.floor(time / 60);
         const seconds = time % 60;
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+
+    const handleDayIncrement = (event: React.MouseEvent<HTMLDivElement>) => {
+        const divRect = event.currentTarget.getBoundingClientRect();
+        const clickX = event.clientX - divRect.left;
+        const divWidth = divRect.width;
+
+        if (clickX < divWidth / 2 && currentDay > 1) {
+            setCurrentDay(prevDay => prevDay - 1);
+            const newStartDate = new Date(displayStartDate);
+            newStartDate.setDate(displayStartDate.getDate() - 1);
+            setDisplayStartDate(newStartDate);
+        } else {
+            setCurrentDay(prevDay => prevDay + 1);
+            const newStartDate = new Date(displayStartDate);
+            newStartDate.setDate(displayStartDate.getDate() + 1);
+            setDisplayStartDate(newStartDate);
+        }
     };
 
     return (
@@ -115,7 +138,6 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
                         marginBottom: '1rem',
                         userSelect: 'none',
                     }}
-
                 >
                     <div
                         style={{
@@ -141,7 +163,6 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
                     </div>
                 </div>
             )}
-
 
             {(isExtraTimeActive && extraTime > 0) && (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
@@ -174,7 +195,6 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
                 {formatTime(mainTime)}
             </div>
 
-
             <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'space-between', width: '25%' }}>
                 <Button onClick={toggleStartStop} style={{ marginRight: '30px', width: '300px' }}>
                     {isActive ? 'Stop' : 'Start'}
@@ -183,8 +203,8 @@ const Countdown: React.FC<CountdownProps> = ({ startingMinutes, extraTimeMinutes
                     Reset
                 </Button>
             </div>
-
-
+            <audio ref={finalAlarmRef} src="/final.mp3" />
+            <audio ref={warningAlarmRef} src="/warning.mp3" />
         </div>
     );
 };
