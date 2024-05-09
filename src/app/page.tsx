@@ -10,7 +10,7 @@ export default function Home() {
     extraTime: 0
   });
 
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
